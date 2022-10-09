@@ -21,8 +21,7 @@ namespace TeleBotOrders
             None,
             RegistrName,
             RegistrPhone,
-            OrderBegin,
-
+            OrderBegin
         }
         public string Token { get; set; }
         private ITelegramBotClient _bot;
@@ -30,6 +29,8 @@ namespace TeleBotOrders
         private User _user;
         private long _id = -1;
         private TypeHandler _typeHandler = TypeHandler.None;
+        private Order _currentOrder;
+
         public TeleBot() 
         {
             Token = "5773151578:AAH2GEcv7Ey3LKcnM_Z0lJpmH0NiXf1Dttk";
@@ -140,7 +141,42 @@ namespace TeleBotOrders
 Команда /assign_init  назначить кого-то инициатором");
                     return;
                 }
-
+                if (message.Text.ToLower() == "/reg")
+                {
+                    _user = new User();
+                    _typeHandler = TypeHandler.RegistrName;
+                    _user.Id = _id;
+                    await botClient.SendTextMessageAsync(message.Chat, "Введите свое имя");
+                    return;
+                }
+                if (message.Text.ToLower() == "/edit_profile") 
+                { 
+                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                }
+                if (message.Text.ToLower() == "/order")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                }
+                if (message.Text.ToLower() == "/cafe")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                }
+                if (message.Text.ToLower() == "/menu")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                }
+                if (message.Text.ToLower() == "/cancel_order")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                }
+                if (message.Text.ToLower() == "/cancel_init")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                }
+                if (message.Text.ToLower() == "/assign_init")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                }
                 switch (_typeHandler)
                 {
                     case TypeHandler.RegistrName:
