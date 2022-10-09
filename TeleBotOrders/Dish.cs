@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace TeleBotOrders
 {
-    internal class User
+    internal class Dish
     {
-        public long Id { get; set; }
+        public long Id { get; set; } 
         public string Name { get; set; }
-        public string PhoneNumber { get; set; }
+        public string Description { get; set; }
+        public double Price { get; set; }
+        public double Discount { get; set; }
     }
 }

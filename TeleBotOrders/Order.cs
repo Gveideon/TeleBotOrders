@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace TeleBotOrders
 {
-    internal class User
+    internal class Order
     {
         public long Id { get; set; }
         public string Name { get; set; }
-        public string PhoneNumber { get; set; }
     }
 }

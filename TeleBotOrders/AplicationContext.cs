@@ -10,10 +10,9 @@ namespace TeleBotOrders
     internal class ApplicationContext : DbContext
     {
         public DbSet<User> Users { get; set; }
-        public ApplicationContext()
-        {
-            Database.EnsureCreated();
-        }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<Cafe> Cafes { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=usersdb;Username=postgres;Password=31428");
