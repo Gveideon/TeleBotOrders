@@ -41,6 +41,38 @@ namespace TeleBotOrders
                 return false;
             }
         }
+        public static User FindUserByIndex(long id)
+        {
+            try
+            {
+                ApplicationContext db;
+                using (db = new ApplicationContext())
+                {
+                    return db.Users.ToList().Find(x=> x.Id == id);
+                }
+            }
+            catch (Exception exp)
+            {
+                Debug.WriteLine(exp.Message);
+                return null;
+            }
+        }
+        public static long CountOrders()
+        {
+            try
+            {
+                ApplicationContext db;
+                using (db = new ApplicationContext())
+                {
+                    return db.Orders.Count();
+                }
+            }
+            catch (Exception exp)
+            {
+                Debug.WriteLine(exp.Message);
+                return -1;
+            }
+        }
         public static IEnumerable<long> GetAllUsersId() 
         {
             try

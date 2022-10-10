@@ -13,5 +13,7 @@ namespace TeleBotOrders
         public long Id { get; set; }
         public string Name { get; set; }
         public List<Dish> Dishes { get; set; } = new();
+        public long? OrderId { get; set; }
+        public Order Order { get; set; }
     }
 }

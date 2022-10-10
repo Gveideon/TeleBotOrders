@@ -22,22 +22,27 @@ namespace TeleBotOrders
             RegistrName,
             RegistrPhone,
             OrderBegin,
+            OrderChooseMenu,
             ChooseCafe,
         }
         public string Token { get; set; }
         private ITelegramBotClient _bot;
         private CancellationTokenSource _cts;
         private User _user;
+        private User _initUser;
+        private List<User> _coopUsers;
         private long _id = -1;
         private TypeHandler _typeHandler = TypeHandler.None;
         private Order _currentOrder;
         private List<Cafe> _currentCafes;
+        private List<long> _usersIds;
 
         public TeleBot() 
         {
             Token = "5773151578:AAH2GEcv7Ey3LKcnM_Z0lJpmH0NiXf1Dttk";
             _bot = new TelegramBotClient(Token);
-             _cts = new CancellationTokenSource();
+            _cts = new CancellationTokenSource();
+            _usersIds = new List<long>();
         }
         public void Start() 
         {
@@ -54,6 +59,7 @@ namespace TeleBotOrders
                 receiverOptions,
                 cancellationToken
             );
+            _usersIds = DBController.GetAllUsersId().ToList();
         }
         public void Stop()
         {
@@ -124,6 +130,48 @@ namespace TeleBotOrders
                         await botClient.SendTextMessageAsync(message.Chat, "что то пошло не так !(");
                     return;
                 }
+                //if (_typeHandler == TypeHandler.OrderBegin)
+                //{
+                    if(_initUser.Id != chatId && call.Data == "join_to_order_yes")
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "Вы присоеденились к заказу");
+                        _coopUsers.Add(DBController.FindUserByIndex(chatId));
+                        await botClient.SendTextMessageAsync(message.Chat, "Подождите пока инициатор выберет кафе!)");
+                    return;
+                    }
+                    
+                //}
+                if(_typeHandler == TypeHandler.OrderChooseMenu)
+                {
+                    if (_initUser.Id == chatId)
+                    {
+                        foreach (var id in _usersIds)
+                        {
+                            if (_currentCafes == null)
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "простите ничего не нашел");
+                                return;
+                            }
+                            await botClient.SendTextMessageAsync(message.Chat, "Ищу меню ");
+                            var text = "";
+                            var index = 1;
+                            List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
+                            var indexMenu = Convert.ToInt32(call.Data);
+                            var dishes = DBController.GetDishes(_currentCafes[indexMenu - 1].Menu.Id);
+                            foreach (var dish in dishes)
+                            {
+                                text = $"{index}) {dish.Name} price: {dish.Price}, discount: {dish.Discount} \n\r Description {dish.Description}";
+                                await botClient.SendTextMessageAsync(message.Chat, text);
+                                var photo = await botClient.SendPhotoAsync(
+                                chatId: chatId,
+                                photo: $"{dish.PathImage}",
+                                parseMode: ParseMode.Html,
+                                cancellationToken: cancellationToken);
+                            }
+                            return;
+                        }
+                    }
+                }
             }
 
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message && update.Message != null)
@@ -179,7 +227,56 @@ namespace TeleBotOrders
                 }
                 if (message.Text.ToLower() == "/order")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                    _typeHandler = TypeHandler.OrderBegin;
+                    _coopUsers = new List<User>();
+                    await botClient.SendTextMessageAsync(message.Chat, "начинается инициализация заказа");
+                    //if(_user == null)
+                        _initUser = DBController.FindUserByIndex(chatId);
+                        _initUser.IsInit = true;
+                    //else
+                        /* нужно продумать момент с несколькими заказами */
+                    _currentOrder = new Order {Name =$"заказ {DBController.CountOrders()}"};
+                    InlineKeyboardMarkup inlineKeyboard = new(new[]
+                   {
+                        new []
+                        {
+                            InlineKeyboardButton.WithCallbackData(text: "Да", callbackData: "join_to_order_yes"),
+                            InlineKeyboardButton.WithCallbackData(text: "Нет", callbackData: "join_to_order_no"),
+                        },
+                    });
+                    foreach (var id in _usersIds)
+                    {
+                        if (id != chatId)
+                        {
+                            var sentMessage = await botClient.SendTextMessageAsync(
+                            chatId: id,
+                            text: $"Пользователь {_initUser.Name} инициировал заказ, хотите присоединиться?",
+                            replyMarkup: inlineKeyboard,
+                            cancellationToken: cancellationToken);
+                        }
+                    }
+                    _typeHandler = TypeHandler.OrderChooseMenu;
+                    await botClient.SendTextMessageAsync(message.Chat, "Ищу кафе");
+                    var text = "";
+                    var index = 1;
+                    List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
+                    _currentCafes = DBController.GetAllCafes().ToList();
+                    foreach (var cafe in _currentCafes)
+                    {
+                        text += $"{index}) {cafe.Name} \n\r";
+                        buttons.Add(InlineKeyboardButton.WithCallbackData(text: $"{index}", callbackData: $"{index}"));
+                        index++;
+                    }
+                     inlineKeyboard = new(new[]
+                    {
+                        buttons.ToArray()
+                    });
+                    await botClient.SendTextMessageAsync(chatId: chatId,
+                        text: text,
+                        replyMarkup: inlineKeyboard,
+                        cancellationToken: cancellationToken);
+                
+                return;
                 }
                 if (message.Text.ToLower() == "/cafe")
                 {

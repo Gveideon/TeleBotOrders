@@ -12,6 +12,8 @@ namespace TeleBotOrders
         [Key]
         public long Id { get; set; }
         public string Name { get; set; }
-        public Menu Menu { get; set; }  
+        public Menu Menu { get; set; }
+        public long? OrderId { get; set; }
+        public Order Order { get; set; }
     }
 }

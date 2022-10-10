@@ -13,5 +13,8 @@ namespace TeleBotOrders
         public long Id { get; set; }
         public string Name { get; set; }
         public string PhoneNumber { get; set; }
+        public bool IsInit { get; set; } = false;
+        public long? OrderId { get; set; }
+        public Order Order { get; set; }
     }
 }
