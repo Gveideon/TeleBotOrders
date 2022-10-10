@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TeleBotOrders;
@@ -11,9 +12,10 @@ using TeleBotOrders;
 namespace TeleBotOrders.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20221010184826_removeMenuId")]
+    partial class removeMenuId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -148,11 +150,9 @@ namespace TeleBotOrders.Migrations
 
             modelBuilder.Entity("TeleBotOrders.Dish", b =>
                 {
-                    b.HasOne("TeleBotOrders.Menu", "Menu")
+                    b.HasOne("TeleBotOrders.Menu", null)
                         .WithMany("Dishes")
                         .HasForeignKey("MenuId");
-
-                    b.Navigation("Menu");
                 });
 
             modelBuilder.Entity("TeleBotOrders.Menu", b =>

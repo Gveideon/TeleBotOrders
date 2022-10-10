@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TeleBotOrders;
@@ -11,9 +12,10 @@ using TeleBotOrders;
 namespace TeleBotOrders.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20221010193221_tryFixVer1")]
+    partial class tryFixVer1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,7 +61,10 @@ namespace TeleBotOrders.Migrations
                     b.Property<double>("Discount")
                         .HasColumnType("double precision");
 
-                    b.Property<long?>("MenuId")
+                    b.Property<int?>("MenuId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("MenuId1")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Name")
@@ -75,7 +80,7 @@ namespace TeleBotOrders.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MenuId");
+                    b.HasIndex("MenuId1");
 
                     b.ToTable("Dishes");
                 });
@@ -150,7 +155,9 @@ namespace TeleBotOrders.Migrations
                 {
                     b.HasOne("TeleBotOrders.Menu", "Menu")
                         .WithMany("Dishes")
-                        .HasForeignKey("MenuId");
+                        .HasForeignKey("MenuId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Menu");
                 });

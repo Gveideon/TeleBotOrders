@@ -21,7 +21,8 @@ namespace TeleBotOrders
             None,
             RegistrName,
             RegistrPhone,
-            OrderBegin
+            OrderBegin,
+            ChooseCafe,
         }
         public string Token { get; set; }
         private ITelegramBotClient _bot;
@@ -30,6 +31,7 @@ namespace TeleBotOrders
         private long _id = -1;
         private TypeHandler _typeHandler = TypeHandler.None;
         private Order _currentOrder;
+        private List<Cafe> _currentCafes;
 
         public TeleBot() 
         {
@@ -53,9 +55,6 @@ namespace TeleBotOrders
                 cancellationToken
             );
         }
-
-
-
         public void Stop()
         {
             _cts.Cancel();
@@ -74,6 +73,31 @@ namespace TeleBotOrders
                 var chatId = message.Chat.Id;
                 Debug.WriteLine(call.From.Id);
                 Debug.WriteLine(message.Text);
+                if(_typeHandler == TypeHandler.ChooseCafe)
+                {
+                    if (_currentCafes == null)
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "простите ничего не нашел");
+                        return;
+                    }
+                    await botClient.SendTextMessageAsync(message.Chat, "Ищу меню ");
+                    var text = "";
+                    var index = 1;
+                    List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
+                    var indexMenu = Convert.ToInt32(call.Data);
+                    var dishes = DBController.GetDishes(_currentCafes[indexMenu - 1].Menu.Id);
+                    foreach (var dish in dishes)
+                    {
+                        text = $"{index}) {dish.Name} price: {dish.Price}, discount: {dish.Discount} \n\r Description {dish.Description}";
+                        await botClient.SendTextMessageAsync(message.Chat, text);
+                        var photo = await botClient.SendPhotoAsync(
+                        chatId: chatId,
+                        photo: $"{dish.PathImage}",
+                        parseMode: ParseMode.Html,
+                        cancellationToken: cancellationToken);
+                    }
+                    return;
+                }
                 if (call.Data == "registr_yes")
                 {
                     _user = new User();
@@ -159,7 +183,27 @@ namespace TeleBotOrders
                 }
                 if (message.Text.ToLower() == "/cafe")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "в разработке");
+                    _typeHandler = TypeHandler.ChooseCafe;
+                    await botClient.SendTextMessageAsync(message.Chat, "Ищу кафе");
+                    var text = "";
+                    var index = 1;
+                    List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
+                    _currentCafes = DBController.GetAllCafes().ToList();
+                    foreach (var cafe in _currentCafes)
+                    {
+                        text += $"{index}) {cafe.Name} \n\r";
+                        buttons.Add(InlineKeyboardButton.WithCallbackData(text: $"{index}", callbackData: $"{index}"));
+                        index++;
+                    }
+                    InlineKeyboardMarkup inlineKeyboard = new(new[]
+                    {
+                        buttons.ToArray()
+                    });
+                    await botClient.SendTextMessageAsync(chatId: chatId,
+                        text:text,
+                        replyMarkup: inlineKeyboard,
+                        cancellationToken: cancellationToken);
+                    return;
                 }
                 if (message.Text.ToLower() == "/menu")
                 {

@@ -8,6 +8,7 @@ namespace TeleBotOrders
         public MainForm()
         {
             InitializeComponent();
+           // DBController.CreateTestCafe();
         }
 
         private void buttonBotStart_Click(object sender, EventArgs e)
