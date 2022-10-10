@@ -132,7 +132,7 @@ namespace TeleBotOrders
                 }
                 //if (_typeHandler == TypeHandler.OrderBegin)
                 //{
-                    if(_initUser.Id != chatId && call.Data == "join_to_order_yes")
+                    if( _initUser !=null && _initUser.Id != chatId && call.Data == "join_to_order_yes")
                     {
                         await botClient.SendTextMessageAsync(message.Chat, "Вы присоеденились к заказу");
                         _coopUsers.Add(DBController.FindUserByIndex(chatId));
@@ -152,7 +152,7 @@ namespace TeleBotOrders
                                 await botClient.SendTextMessageAsync(message.Chat, "простите ничего не нашел");
                                 return;
                             }
-                            await botClient.SendTextMessageAsync(message.Chat, "Ищу меню ");
+                            await botClient.SendTextMessageAsync(id, "Ищу меню ");
                             var text = "";
                             var index = 1;
                             List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
@@ -161,16 +161,18 @@ namespace TeleBotOrders
                             foreach (var dish in dishes)
                             {
                                 text = $"{index}) {dish.Name} price: {dish.Price}, discount: {dish.Discount} \n\r Description {dish.Description}";
-                                await botClient.SendTextMessageAsync(message.Chat, text);
+                                await botClient.SendTextMessageAsync(id, text);
                                 var photo = await botClient.SendPhotoAsync(
-                                chatId: chatId,
+                                chatId: id,
                                 photo: $"{dish.PathImage}",
                                 parseMode: ParseMode.Html,
                                 cancellationToken: cancellationToken);
                             }
-                            return;
+                            
                         }
-                    }
+
+                    } 
+                    return;
                 }
             }
 
@@ -227,7 +229,6 @@ namespace TeleBotOrders
                 }
                 if (message.Text.ToLower() == "/order")
                 {
-                    _typeHandler = TypeHandler.OrderBegin;
                     _coopUsers = new List<User>();
                     await botClient.SendTextMessageAsync(message.Chat, "начинается инициализация заказа");
                     //if(_user == null)
@@ -275,8 +276,8 @@ namespace TeleBotOrders
                         text: text,
                         replyMarkup: inlineKeyboard,
                         cancellationToken: cancellationToken);
-                
-                return;
+                    _typeHandler = TypeHandler.OrderChooseMenu;
+                    return;
                 }
                 if (message.Text.ToLower() == "/cafe")
                 {
