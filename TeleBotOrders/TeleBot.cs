@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using System.Diagnostics;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TeleBotOrders
 {
@@ -23,6 +24,8 @@ namespace TeleBotOrders
             RegistrPhone,
             OrderBegin,
             OrderChooseMenu,
+            OrderInMenu,
+            OrderCancel,
             ChooseCafe,
         }
         public string Token { get; set; }
@@ -33,9 +36,13 @@ namespace TeleBotOrders
         private List<User> _coopUsers;
         private long _id = -1;
         private TypeHandler _typeHandler = TypeHandler.None;
-        private Order _currentOrder;
+        private Dictionary<long, Order> _currentOrders;
         private List<Cafe> _currentCafes;
+        private List<Dish> dishes;
         private List<long> _usersIds;
+        private int _currentDishIndex = 0;
+        private int _indexCafe;
+        private int _currentDishesLength;
 
         public TeleBot() 
         {
@@ -43,6 +50,7 @@ namespace TeleBotOrders
             _bot = new TelegramBotClient(Token);
             _cts = new CancellationTokenSource();
             _usersIds = new List<long>();
+            _currentOrders = new Dictionary<long, Order>();
         }
         public void Start() 
         {
@@ -77,9 +85,166 @@ namespace TeleBotOrders
                 var call = update.CallbackQuery;
                 var message = call.Message;
                 var chatId = message.Chat.Id;
-                Debug.WriteLine(call.From.Id);
-                Debug.WriteLine(message.Text);
-                if(_typeHandler == TypeHandler.ChooseCafe)
+                if (call.Data == "last_dish")
+                {
+                    if (_currentCafes == null)
+                    {
+                        _currentCafes = DBController.GetAllCafes().ToList();
+                    }
+                    if (_currentDishesLength == 0)
+                    {
+                        _currentDishesLength = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList().Count();
+                    }
+                    if (dishes == null)
+                    {
+                        dishes = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList();
+                    }
+                    if (_currentDishIndex > 0)
+                    {
+                        _currentDishIndex--;
+                        InlineKeyboardMarkup inlineKeyboard = new(new[]
+                        {
+                            new []
+                            {
+                                InlineKeyboardButton.WithCallbackData(text: "<", callbackData: "last_dish"),
+                                InlineKeyboardButton.WithCallbackData(text: ">", callbackData: "next_dish"),
+                            },
+                            new []
+                            {
+                                InlineKeyboardButton.WithCallbackData(text: "-", callbackData: "remove_dish"),
+                                InlineKeyboardButton.WithCallbackData(text: "+", callbackData: "add_dish"),
+                                InlineKeyboardButton.WithCallbackData(text: "Заказать", callbackData: "take_order")
+                            },
+                        });
+                        var text = $"{_currentDishIndex + 1}) {dishes[_currentDishIndex].Name} — цена: {dishes[_currentDishIndex].Price}, скидка: {dishes[_currentDishIndex].Discount}, заказано(шт.):{dishes[_currentDishIndex].Count} \n\r Описание {dishes[_currentDishIndex].Description}";
+                        await _bot.EditMessageMediaAsync(
+                        chatId: chatId,
+                        messageId: call.Message.MessageId,
+                        media: new InputMediaPhoto(new InputMedia($"{dishes[_currentDishIndex].PathImage}")) {ParseMode = ParseMode.Html, Caption = text },
+                        replyMarkup: inlineKeyboard,
+                        cancellationToken: cancellationToken);                  }
+                    return;
+                }
+                if (call.Data == "next_dish")
+                {
+                    if(_currentCafes == null)
+                    {
+                        _currentCafes = DBController.GetAllCafes().ToList();
+                    }
+                    if(_currentDishesLength == 0 )
+                    {
+                        _currentDishesLength = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList().Count();
+                    }
+                    if (dishes == null)
+                    {
+                        dishes = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList();
+                    }
+                    if (_currentDishIndex < _currentDishesLength-1)
+                    {
+                        InlineKeyboardMarkup inlineKeyboard = new(new[]
+                        {
+                            new []
+                            {
+                                InlineKeyboardButton.WithCallbackData(text: "<", callbackData: "last_dish"),
+                                InlineKeyboardButton.WithCallbackData(text: ">", callbackData: "next_dish"),
+                            },
+                            new []
+                            {
+                                InlineKeyboardButton.WithCallbackData(text: "-", callbackData: "remove_dish"),
+                                InlineKeyboardButton.WithCallbackData(text: "+", callbackData: "add_dish"),
+                                InlineKeyboardButton.WithCallbackData(text: "Заказать", callbackData: "take_order")
+                            },
+                        });
+                        _currentDishIndex++;
+                        var text = $"{_currentDishIndex + 1}) {dishes[_currentDishIndex].Name} — цена: {dishes[_currentDishIndex].Price}, скидка: {dishes[_currentDishIndex].Discount}, заказано(шт.):{dishes[_currentDishIndex].Count} \n\r Описание {dishes[_currentDishIndex].Description}";
+                        await _bot.EditMessageMediaAsync(
+                        chatId: chatId,
+                        messageId: call.Message.MessageId,
+                        media: new InputMediaPhoto(new InputMedia($"{dishes[_currentDishIndex].PathImage}")) { ParseMode = ParseMode.Html, Caption = text },
+                        replyMarkup: inlineKeyboard,
+                        cancellationToken: cancellationToken);
+                    }
+                    return;
+                }
+                if (call.Data == "remove_dish")
+                {
+                    if (_currentCafes == null)
+                    {
+                        _currentCafes = DBController.GetAllCafes().ToList();
+                    }
+                    if (_currentDishesLength == 0)
+                    {
+                        _currentDishesLength = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList().Count();
+                    }
+                    if (dishes == null) 
+                    {
+                        dishes = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList();
+                    }
+                    InlineKeyboardMarkup inlineKeyboard = new(new[]
+                    {
+                        new []
+                        {
+                            InlineKeyboardButton.WithCallbackData(text: "<", callbackData: "last_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: ">", callbackData: "next_dish"),
+                        },
+                        new []
+                        {
+                            InlineKeyboardButton.WithCallbackData(text: "-", callbackData: "remove_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: "+", callbackData: "add_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: "Заказать", callbackData: "take_order")
+                        },
+                    });
+                    if(dishes[_currentDishIndex].Count>0)
+                        dishes[_currentDishIndex].Count--;
+                    var text = $"{_currentDishIndex + 1}) {dishes[_currentDishIndex].Name} — цена: {dishes[_currentDishIndex].Price}, скидка: {dishes[_currentDishIndex].Discount}, заказано(шт.):{dishes[_currentDishIndex].Count} \n\r Описание {dishes[_currentDishIndex].Description}";
+                    await _bot.EditMessageMediaAsync(
+                    chatId: chatId,
+                    messageId: call.Message.MessageId,
+                    media: new InputMediaPhoto(new InputMedia($"{dishes[_currentDishIndex].PathImage}")) { ParseMode = ParseMode.Html, Caption = text },
+                    replyMarkup: inlineKeyboard,
+                    cancellationToken: cancellationToken); 
+                    return;
+                }
+                if (call.Data == "add_dish")
+                {
+                    if (_currentCafes == null)
+                    {
+                        _currentCafes = DBController.GetAllCafes().ToList();
+                    }
+                    if (_currentDishesLength == 0)
+                    {
+                        _currentDishesLength = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList().Count();
+                    }
+                    if (dishes == null)
+                    {
+                        dishes = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList();
+                    }
+                    InlineKeyboardMarkup inlineKeyboard = new(new[]
+                    {
+                        new []
+                        {
+                            InlineKeyboardButton.WithCallbackData(text: "<", callbackData: "last_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: ">", callbackData: "next_dish"),
+                        },
+                        new []
+                        {
+                            InlineKeyboardButton.WithCallbackData(text: "-", callbackData: "remove_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: "+", callbackData: "add_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: "Заказать", callbackData: "take_order")
+                        },
+                    });
+                        dishes[_currentDishIndex].Count++;
+                    var text = $"{_currentDishIndex + 1}) {dishes[_currentDishIndex].Name} — цена: {dishes[_currentDishIndex].Price}, скидка: {dishes[_currentDishIndex].Discount}, заказано(шт.):{dishes[_currentDishIndex].Count} \n\r Описание {dishes[_currentDishIndex].Description}";
+                    await _bot.EditMessageMediaAsync(
+                    chatId: chatId,
+                    messageId: call.Message.MessageId,
+                    media: new InputMediaPhoto(new InputMedia($"{dishes[_currentDishIndex].PathImage}")) { ParseMode = ParseMode.Html, Caption = text },
+                    replyMarkup: inlineKeyboard,
+                    cancellationToken: cancellationToken);
+                    
+                    return;
+                }
+                if (_typeHandler == TypeHandler.ChooseCafe)
                 {
                     if (_currentCafes == null)
                     {
@@ -88,20 +253,32 @@ namespace TeleBotOrders
                     }
                     await botClient.SendTextMessageAsync(message.Chat, "Ищу меню ");
                     var text = "";
-                    var index = 1;
-                    List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
-                    var indexMenu = Convert.ToInt32(call.Data);
-                    var dishes = DBController.GetDishes(_currentCafes[indexMenu - 1].Menu.Id);
-                    foreach (var dish in dishes)
+                    InlineKeyboardMarkup inlineKeyboard = new(new[]
                     {
-                        text = $"{index}) {dish.Name} price: {dish.Price}, discount: {dish.Discount} \n\r Description {dish.Description}";
-                        await botClient.SendTextMessageAsync(message.Chat, text);
-                        var photo = await botClient.SendPhotoAsync(
+                        new []
+                        {
+                            InlineKeyboardButton.WithCallbackData(text: "<", callbackData: "last_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: ">", callbackData: "next_dish"),
+                        },
+                        new []
+                        {
+                            InlineKeyboardButton.WithCallbackData(text: "-", callbackData: "remove_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: "+", callbackData: "add_dish"),
+                            InlineKeyboardButton.WithCallbackData(text: "Заказать", callbackData: "take_order")
+                        },
+                    });
+                    _indexCafe = Convert.ToInt32(call.Data);
+                    dishes = DBController.GetDishes(_currentCafes[_indexCafe - 1].Menu.Id).ToList();
+                    _currentDishesLength = dishes.Count;
+                    _currentDishIndex = 0;
+                    text = $"{_currentDishIndex + 1}) {dishes[_currentDishIndex].Name} — цена: {dishes[_currentDishIndex].Price}, скидка: {dishes[_currentDishIndex].Discount}, заказано(шт.):{dishes[_currentDishIndex].Count} \n\r Описание {dishes[_currentDishIndex].Description}";
+                    var photo = await botClient.SendPhotoAsync(
                         chatId: chatId,
-                        photo: $"{dish.PathImage}",
+                        photo: $"{dishes[_currentDishIndex].PathImage}",
+                        caption: text,
+                        replyMarkup: inlineKeyboard,
                         parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
-                    }
                     return;
                 }
                 if (call.Data == "registr_yes")
@@ -141,6 +318,7 @@ namespace TeleBotOrders
                     }
                     
                 //}
+
                 if(_typeHandler == TypeHandler.OrderChooseMenu)
                 {
                     if (_initUser.Id == chatId)
@@ -149,28 +327,38 @@ namespace TeleBotOrders
                         {
                             if (_currentCafes == null)
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "простите ничего не нашел");
+                                await botClient.SendTextMessageAsync(id, "простите ничего не нашел");
                                 return;
                             }
                             await botClient.SendTextMessageAsync(id, "Ищу меню ");
                             var text = "";
-                            var index = 1;
-                            List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
-                            var indexMenu = Convert.ToInt32(call.Data);
-                            var dishes = DBController.GetDishes(_currentCafes[indexMenu - 1].Menu.Id);
-                            foreach (var dish in dishes)
+                            InlineKeyboardMarkup inlineKeyboard = new(new[]
                             {
-                                text = $"{index}) {dish.Name} price: {dish.Price}, discount: {dish.Discount} \n\r Description {dish.Description}";
-                                await botClient.SendTextMessageAsync(id, text);
-                                var photo = await botClient.SendPhotoAsync(
-                                chatId: id,
-                                photo: $"{dish.PathImage}",
-                                parseMode: ParseMode.Html,
-                                cancellationToken: cancellationToken);
-                            }
-                            
+                                new []
+                                {
+                                    InlineKeyboardButton.WithCallbackData(text: "<", callbackData: "last_dish"),
+                                    InlineKeyboardButton.WithCallbackData(text: ">", callbackData: "next_dish"),
+                                },
+                                new []
+                                {
+                                    InlineKeyboardButton.WithCallbackData(text: "-", callbackData: "remove_dish"),
+                                    InlineKeyboardButton.WithCallbackData(text: "+", callbackData: "add_dish"),
+                                    InlineKeyboardButton.WithCallbackData(text: "Заказать", callbackData: "take_order")
+                                },
+                            });
+                            _indexCafe = Convert.ToInt32(call.Data);
+                            dishes = DBController.GetDishes(_currentCafes[_indexCafe - 1].Menu.Id).ToList();
+                            _currentDishesLength = dishes.Count;
+                            _currentDishIndex = 0;
+                            text = $"{_currentDishIndex + 1}) {dishes[_currentDishIndex].Name} — цена: {dishes[_currentDishIndex].Price}, скидка: {dishes[_currentDishIndex].Discount}, заказано(шт.):{dishes[_currentDishIndex].Count} \n\r Описание {dishes[_currentDishIndex].Description}";
+                            var photo = await botClient.SendPhotoAsync(
+                            chatId: id,
+                            photo: $"{dishes[_currentDishIndex].PathImage}",
+                            caption: text,
+                            replyMarkup: inlineKeyboard,
+                            parseMode: ParseMode.Html,
+                            cancellationToken: cancellationToken);
                         }
-
                     } 
                     return;
                 }
@@ -182,7 +370,7 @@ namespace TeleBotOrders
                 var chatId = message.Chat.Id;
                 if (message.Text.ToLower() == "/start")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "Добро пожаловать в бот. Здесь можно кооперироваться с колеггами по работе и совершать общий заказ еды!_)");
+                    await botClient.SendTextMessageAsync(message.Chat, "Добро пожаловать в бот. Здесь можно кооперироваться с колеггами по работе и совершать общий заказ еды!_) Для справки наберите /help");
                     InlineKeyboardMarkup inlineKeyboard = new(new[]
                     {
                         new []
@@ -232,11 +420,11 @@ namespace TeleBotOrders
                     _coopUsers = new List<User>();
                     await botClient.SendTextMessageAsync(message.Chat, "начинается инициализация заказа");
                     //if(_user == null)
-                        _initUser = DBController.FindUserByIndex(chatId);
-                        _initUser.IsInit = true;
+                   _initUser = DBController.FindUserByIndex(chatId);
+                   _initUser.IsInit = true;
                     //else
                         /* нужно продумать момент с несколькими заказами */
-                    _currentOrder = new Order {Name =$"заказ {DBController.CountOrders()}"};
+                    _currentOrders.Add( chatId, new Order {Name =$"заказ {DBController.CountOrders()}", Users = new List<User> { _initUser} });
                     InlineKeyboardMarkup inlineKeyboard = new(new[]
                    {
                         new []
@@ -353,6 +541,7 @@ namespace TeleBotOrders
             var ex = JsonSerializer.Serialize(exception);
             Console.WriteLine(ex);
             Debug.WriteLine(ex);
+            MessageBox.Show(ex);
         }
 
     }
