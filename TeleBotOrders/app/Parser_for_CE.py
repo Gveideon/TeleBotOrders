@@ -1,6 +1,3 @@
-from Dish import Dish
-from Menu import Menu
-from Cafe import Cafe
 from bs4 import BeautifulSoup
 
 def Parse(page_source):
@@ -17,6 +14,5 @@ def Parse(page_source):
         else:    
             description = sibling.contents[1].contents[0]
         price = sibling.contents[2].contents[0].contents[0].text
-        list_result.append(Dish(name, count, description, img, price))
-    print(list_result)
-    return Cafe('Китайская забегаловка', Menu('Китайская забегаловка' ,list_result))
+        list_result.append([name, count, description, img, price])
+    return list_result
