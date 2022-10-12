@@ -1,6 +1,3 @@
-from Dish import Dish
-from Menu import Menu
-from Cafe import Cafe
 from bs4 import BeautifulSoup
 
 def Parse(page_source):
@@ -19,5 +16,3 @@ def Parse(page_source):
         price = sibling.contents[2].contents[0].contents[0].text
         list_result.append([name, count, description, img, price])
     return list_result
-
-    #Cafe('Китайская забегаловка', Menu('Китайская забегаловка' ,list_result))

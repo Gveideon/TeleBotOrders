@@ -1,4 +1,4 @@
-import os, time, json, Parser_for_CE
+﻿import os, time, json, Parser_for_CE
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
