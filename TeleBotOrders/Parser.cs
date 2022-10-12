@@ -20,7 +20,10 @@ namespace TeleBotOrders
             _engine = Python.CreateEngine();
             _scope = _engine.CreateScope();
             var searchPaths = _engine.GetSearchPaths();
-            searchPaths.Add(@"C:\Python27\Lib");
+            //searchPaths.Add(@"..\..\..\app\Parser_for_CE.py");
+            searchPaths.Add(@"D:\Work\Programms\CSharp\TelegramBot\TeleBotOrders\app");
+            searchPaths.Add(@"D:\Work\Programms\CSharp\TelegramBot\TeleBotOrders\app\venv\Lib\site-packages\bs4\__init__.py");
+            searchPaths.Add(@"..\..\..\app\bs4\");
             _engine.SetSearchPaths(searchPaths);
             var path = @"..\..\..\app\Parser.py";
             _engine.ExecuteFile(path, _scope);
