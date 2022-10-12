@@ -12,6 +12,7 @@ namespace TeleBotOrders
         [Key]
         public long Id { get; set; }
         public string Name { get; set; }
+        public double TotalAmount { get; set; }
         public Cafe Cafe { get; set; }
         public Menu Menu { get; set; }
         public  List<User> Users { get; set; }

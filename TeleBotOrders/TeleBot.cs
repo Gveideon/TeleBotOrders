@@ -44,6 +44,7 @@ namespace TeleBotOrders
         private int _currentDishIndex = 0;
         private int _indexCafe;
         private int _currentDishesLength;
+        private int _countUserInOrder = 0;
 
         public TeleBot() 
         {
@@ -51,8 +52,9 @@ namespace TeleBotOrders
             _bot = new TelegramBotClient(Token);
             _cts = new CancellationTokenSource();
             _usersIds = new List<long>();
-            _currentOrders = new Dictionary<long, Order>();
+            _currentOrders = new Dictionary<long, Order>(1);
             dishes = new Dictionary<long, List<Dish>>();
+            _coopUsers = new List<User>();
         }
         public void Start() 
         {
@@ -87,11 +89,40 @@ namespace TeleBotOrders
             {
                 _id = update.Message.Chat.Id;
             }
+            if (_countUserInOrder <= 0 && _currentOrders.Count() != 0) 
+            {
+
+                var order = _currentOrders.FirstOrDefault().Value;
+                order.Menu = _currentCafes[_indexCafe].Menu;
+                order.Cafe = _currentCafes[_indexCafe];
+                var text = "";
+                foreach (var dish in order.Dishes)
+                {
+                    text += $"Блюдо: {dish.Name}, {dish.Count} шт. \n\r";
+                }
+                foreach (var id in _usersIds)
+                {
+                    if (_coopUsers.Find(x => x.Id == id) == null)
+                    {
+                        continue;
+                    }
+                    await botClient.SendTextMessageAsync(id, $"Заказ завершен. Общая сумма:{order.TotalAmount} \n\r" + text);
+                    if (id != _initUser.Id)
+                    {
+                        await botClient.SendTextMessageAsync(id, $"Оплачивает {_initUser.Name}, номер: {_initUser.PhoneNumber}");
+                    }
+                }
+                DBController.AddNewOrder(order);
+                _coopUsers.Clear();
+                _currentOrders.Clear();
+                return;
+            }
             if (update.Message == null && update.CallbackQuery != null)
             {
                 var call = update.CallbackQuery;
                 var message = call.Message;
                 var chatId = message.Chat.Id;
+                
                 if (call.Data == "last_dish")
                 {
                     if (_currentCafes == null)
@@ -277,6 +308,93 @@ namespace TeleBotOrders
                     cancellationToken: cancellationToken);              
                     return;
                 }
+                if (call.Data == "take_order")
+                {
+                    if (_currentCafes == null)
+                    {
+                        _currentCafes = DBController.GetAllCafes().ToList();
+                    }
+                    if (_currentDishesLength == 0)
+                    {
+                        _currentDishesLength = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList().Count();
+                    }
+                    if (dishes[chatId].Count() == 0)
+                    {
+                        dishes[chatId] = DBController.GetDishes(_currentCafes[_indexCafe].Menu.Id).ToList();
+                    }
+                    if (_currentOrders.Count == 0)
+                    {
+                        //_coopUsers = new List<User>();
+                        //await botClient.SendTextMessageAsync(message.Chat, "начинается инициализация заказа");
+                        //_initUser = DBController.FindUserByIndex(chatId);
+                        //_initUser.IsInit = true;
+
+                        ///* нужно продумать момент с несколькими заказами */
+                        ////_currentOrders.Add( chatId, new Order {Name =$"заказ {DBController.CountOrders()}", Users = new List<User> { _initUser} });
+                        //_currentOrders = new Dictionary<long, Order>(1);
+                        //_currentOrders.Add(chatId, new Order { Name = $"заказ {DBController.CountOrders()}", Users = new List<User> { _initUser } });
+                        //InlineKeyboardMarkup inlineKeyboard = new(new[]
+                        //{
+                        //    new []
+                        //    {
+                        //        InlineKeyboardButton.WithCallbackData(text: "Да", callbackData: "join_to_order_yes"),
+                        //        InlineKeyboardButton.WithCallbackData(text: "Нет", callbackData: "join_to_order_no"),
+                        //    },
+                        //});
+                        //foreach (var id in _usersIds)
+                        //{
+                        //    if (id != chatId)
+                        //    {
+                        //        var sentMessage = await botClient.SendTextMessageAsync(
+                        //        chatId: id,
+                        //        text: $"Пользователь {_initUser.Name} инициировал заказ, хотите присоединиться?",
+                        //        replyMarkup: inlineKeyboard,
+                        //        cancellationToken: cancellationToken);
+                        //    }
+                        //}
+                        //_currentOrders[chatId].Menu = _currentCafes[_indexCafe].Menu;
+                        //_currentOrders[chatId].Cafe = _currentCafes[_indexCafe];
+                        await botClient.SendTextMessageAsync(message.Chat, "Вариант с заказои сразу через кафе пока в разработке, для осуществления заказала пожалуйста наберите /order");
+                    }
+                    else
+                    {
+                        var order = _currentOrders.FirstOrDefault().Value;
+
+                        order.Dishes = new List<Dish>();
+                        order.Dishes.AddRange(dishes[chatId]);
+                        order.TotalAmount += dishes[chatId].Select(x => x.Count * x.Price - x.Discount).Sum();
+                        _countUserInOrder--;
+                        await botClient.SendTextMessageAsync(message.Chat, $"Осталось {_countUserInOrder}, пожалуйста подождите пока все завершат заказ");
+                        if (_countUserInOrder <= 0 && _currentOrders.Count() != 0)
+                        {
+
+                            order.Menu = _currentCafes[_indexCafe].Menu;
+                            order.Cafe = _currentCafes[_indexCafe];
+                            var text = "";
+                            foreach (var dish in order.Dishes)
+                            {
+                                text += $"Блюдо: {dish.Name}, {dish.Count} шт. \n\r";
+                            }
+                            foreach (var id in _usersIds)
+                            {
+                                if (_coopUsers.Find(x => x.Id == id) == null)
+                                {
+                                    continue;
+                                }
+                                await botClient.SendTextMessageAsync(id, $"Заказ завершен. Общая сумма:{order.TotalAmount} \n\r" + text);
+                                if (id != _initUser.Id)
+                                {
+                                    await botClient.SendTextMessageAsync(id, $"Оплачивает {_initUser.Name}, номер: {_initUser.PhoneNumber}");
+                                }
+                            }
+                            DBController.AddNewOrder(order);
+                            _coopUsers.Clear();
+                            _currentOrders.Clear();
+                            return;
+                        }
+                    }
+                    return;
+                }
                 if (_typeHandler == TypeHandler.ChooseCafe)
                 {
                     if (_currentCafes == null)
@@ -342,21 +460,32 @@ namespace TeleBotOrders
                     return;
                 }
 
-                if(call.Data == "join_to_order_yes" && _typeHandler == TypeHandler.OrderChooseMenu && _coopUsers.Find(x => x.Id == chatId) == null)
-                { 
-                    _coopUsers.Add(DBController.FindUserByIndex(chatId));
+                if(_initUser != null && _initUser.Id != chatId && call.Data == "join_to_order_yes" && _typeHandler == TypeHandler.OrderChooseMenu && _coopUsers.Find(x => x.Id == chatId) == null)
+                {
+                    var user = DBController.FindUserByIndex(chatId);
+                    if (_coopUsers.First(x => x.Id == user.Id) == null)
+                    {
+                        _coopUsers.Add(user);
+                        _countUserInOrder++;
+                    }
                     await botClient.SendTextMessageAsync(message.Chat, "Вы присоеденились к заказу");
                     await botClient.SendTextMessageAsync(message.Chat, "Подождите пока инициатор выберет кафе!)");
                     return;
                 }
-                if (call.Data == "join_to_order_yes" && _typeHandler != TypeHandler.OrderChooseMenu) 
+                if (_initUser != null && _initUser.Id != chatId && call.Data == "join_to_order_yes" && _typeHandler != TypeHandler.OrderChooseMenu) 
                 {
-                    if (_currentCafes == null)
+                    if (_currentCafes == null || _coopUsers == null)
                     {
                         await botClient.SendTextMessageAsync(chatId, "простите ничего не нашел");
                         return;
                     }
-                    _coopUsers.Add(DBController.FindUserByIndex(chatId));
+                    var user = DBController.FindUserByIndex(chatId);
+                    if(_coopUsers.First(x => x.Id ==user.Id)== null)
+                    {
+                        _coopUsers.Add(user);
+                        _countUserInOrder++;
+                    }
+
                     await botClient.SendTextMessageAsync(chatId, "Ищу меню ");
                     var text = "";
                     InlineKeyboardMarkup inlineKeyboard = new(new[]
@@ -496,15 +625,23 @@ namespace TeleBotOrders
                 }
                 if (message.Text.ToLower() == "/order")
                 {
+                    if (_currentOrders.Count() != 0)
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "Идет другой заказ пожалуйста подождите");
+                        return;
+                    }
+                    _countUserInOrder = 1;
                     _typeHandler = TypeHandler.OrderChooseMenu;
                     _coopUsers = new List<User>();
+                   
                     await botClient.SendTextMessageAsync(message.Chat, "начинается инициализация заказа");
-                    //if(_user == null)
                    _initUser = DBController.FindUserByIndex(chatId);
                    _initUser.IsInit = true;
-                    //else
-                        /* нужно продумать момент с несколькими заказами */
-                    _currentOrders.Add( chatId, new Order {Name =$"заказ {DBController.CountOrders()}", Users = new List<User> { _initUser} });
+                     _coopUsers.Add(_initUser);
+                    /* нужно продумать момент с несколькими заказами */
+                    //_currentOrders.Add( chatId, new Order {Name =$"заказ {DBController.CountOrders()}", Users = new List<User> { _initUser} });
+                    _currentOrders = new Dictionary<long, Order>(1);
+                    _currentOrders.Add(chatId, new Order { Name = $"заказ {DBController.CountOrders()}", Users = new List<User> { _initUser } });
                     InlineKeyboardMarkup inlineKeyboard = new(new[]
                    {
                         new []

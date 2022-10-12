@@ -41,6 +41,37 @@ namespace TeleBotOrders
                 return false;
             }
         }
+        public static bool AddNewOrder(Order order)
+        {
+            try
+            {
+                ApplicationContext db;
+                using (db = new ApplicationContext())
+                {
+                    var orders = db.Orders.ToList();
+                    var orders1 = db.Orders;
+                    var orderFromDb = orders1.Find(order.Id);
+                    if (orders.Find(o => o.Id == order.Id) == null)
+                    {
+                        db.Orders.Add(order);
+                    }
+                    else
+                    {
+                        //db.Users.Update(userFromDb);
+                        db.Orders.Remove(orderFromDb);
+                        db.Orders.Add(order);
+                    }
+                    db.SaveChanges();
+                }
+                return true;
+            }
+
+            catch (Exception exp)
+            {
+                Debug.WriteLine(exp.Message);
+                return false;
+            }
+        }
         public static User FindUserByIndex(long id)
         {
             try
