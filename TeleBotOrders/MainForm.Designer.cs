@@ -31,17 +31,20 @@
             this.buttonBotStart = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.fieldHost = new System.Windows.Forms.TextBox();
-            this.fieldPort = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.fieldDatabase = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.fieldUsername = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
+            this.buttonChangeStringConnection = new System.Windows.Forms.Button();
             this.fieldPassword = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.buttonChangeStringConnection = new System.Windows.Forms.Button();
+            this.fieldUsername = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.fieldDatabase = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.fieldPort = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.fieldHost = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.buttonUpdateByJson = new System.Windows.Forms.Button();
+            this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.fieldNameCafe = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -86,69 +89,15 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Строка подключения  бд";
             // 
-            // label1
+            // buttonChangeStringConnection
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 36);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(56, 28);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Host";
-            // 
-            // fieldHost
-            // 
-            this.fieldHost.Location = new System.Drawing.Point(118, 33);
-            this.fieldHost.Name = "fieldHost";
-            this.fieldHost.Size = new System.Drawing.Size(320, 34);
-            this.fieldHost.TabIndex = 1;
-            // 
-            // fieldPort
-            // 
-            this.fieldPort.Location = new System.Drawing.Point(118, 73);
-            this.fieldPort.Name = "fieldPort";
-            this.fieldPort.Size = new System.Drawing.Size(320, 34);
-            this.fieldPort.TabIndex = 3;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 76);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(52, 28);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "Port";
-            // 
-            // fieldDatabase
-            // 
-            this.fieldDatabase.Location = new System.Drawing.Point(119, 113);
-            this.fieldDatabase.Name = "fieldDatabase";
-            this.fieldDatabase.Size = new System.Drawing.Size(320, 34);
-            this.fieldDatabase.TabIndex = 5;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(13, 116);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(100, 28);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Database";
-            // 
-            // fieldUsername
-            // 
-            this.fieldUsername.Location = new System.Drawing.Point(119, 153);
-            this.fieldUsername.Name = "fieldUsername";
-            this.fieldUsername.Size = new System.Drawing.Size(320, 34);
-            this.fieldUsername.TabIndex = 7;
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 156);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(106, 28);
-            this.label4.TabIndex = 6;
-            this.label4.Text = "Username";
+            this.buttonChangeStringConnection.Location = new System.Drawing.Point(13, 242);
+            this.buttonChangeStringConnection.Name = "buttonChangeStringConnection";
+            this.buttonChangeStringConnection.Size = new System.Drawing.Size(136, 42);
+            this.buttonChangeStringConnection.TabIndex = 10;
+            this.buttonChangeStringConnection.Text = "Задать";
+            this.buttonChangeStringConnection.UseVisualStyleBackColor = true;
+            this.buttonChangeStringConnection.Click += new System.EventHandler(this.buttonChangeStringConnection_Click);
             // 
             // fieldPassword
             // 
@@ -166,21 +115,99 @@
             this.label5.TabIndex = 8;
             this.label5.Text = "Password";
             // 
-            // buttonChangeStringConnection
+            // fieldUsername
             // 
-            this.buttonChangeStringConnection.Location = new System.Drawing.Point(13, 242);
-            this.buttonChangeStringConnection.Name = "buttonChangeStringConnection";
-            this.buttonChangeStringConnection.Size = new System.Drawing.Size(136, 42);
-            this.buttonChangeStringConnection.TabIndex = 10;
-            this.buttonChangeStringConnection.Text = "Задать";
-            this.buttonChangeStringConnection.UseVisualStyleBackColor = true;
-            this.buttonChangeStringConnection.Click += new System.EventHandler(this.buttonChangeStringConnection_Click);
+            this.fieldUsername.Location = new System.Drawing.Point(119, 153);
+            this.fieldUsername.Name = "fieldUsername";
+            this.fieldUsername.Size = new System.Drawing.Size(320, 34);
+            this.fieldUsername.TabIndex = 7;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(13, 156);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(106, 28);
+            this.label4.TabIndex = 6;
+            this.label4.Text = "Username";
+            // 
+            // fieldDatabase
+            // 
+            this.fieldDatabase.Location = new System.Drawing.Point(119, 113);
+            this.fieldDatabase.Name = "fieldDatabase";
+            this.fieldDatabase.Size = new System.Drawing.Size(320, 34);
+            this.fieldDatabase.TabIndex = 5;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(13, 116);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(100, 28);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Database";
+            // 
+            // fieldPort
+            // 
+            this.fieldPort.Location = new System.Drawing.Point(118, 73);
+            this.fieldPort.Name = "fieldPort";
+            this.fieldPort.Size = new System.Drawing.Size(320, 34);
+            this.fieldPort.TabIndex = 3;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(13, 76);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(52, 28);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "Port";
+            // 
+            // fieldHost
+            // 
+            this.fieldHost.Location = new System.Drawing.Point(118, 33);
+            this.fieldHost.Name = "fieldHost";
+            this.fieldHost.Size = new System.Drawing.Size(320, 34);
+            this.fieldHost.TabIndex = 1;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(13, 36);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(56, 28);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Host";
+            // 
+            // buttonUpdateByJson
+            // 
+            this.buttonUpdateByJson.Location = new System.Drawing.Point(303, 316);
+            this.buttonUpdateByJson.Name = "buttonUpdateByJson";
+            this.buttonUpdateByJson.Size = new System.Drawing.Size(189, 29);
+            this.buttonUpdateByJson.TabIndex = 3;
+            this.buttonUpdateByJson.Text = "Загрузить кафе в  бд";
+            this.buttonUpdateByJson.UseVisualStyleBackColor = true;
+            this.buttonUpdateByJson.Click += new System.EventHandler(this.buttonUpdateByJson_Click);
+            // 
+            // openFileDialog
+            // 
+            this.openFileDialog.FileName = "data_file.json";
+            this.openFileDialog.Filter = "\"Json files(*.json)|*.json|All files(*.*)|*.*\"";
+            // 
+            // fieldNameCafe
+            // 
+            this.fieldNameCafe.Location = new System.Drawing.Point(501, 318);
+            this.fieldNameCafe.Name = "fieldNameCafe";
+            this.fieldNameCafe.Size = new System.Drawing.Size(287, 27);
+            this.fieldNameCafe.TabIndex = 11;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.fieldNameCafe);
+            this.Controls.Add(this.buttonUpdateByJson);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.buttonBotStart);
@@ -189,6 +216,7 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -208,5 +236,8 @@
         private TextBox fieldPassword;
         private Label label5;
         private Button buttonChangeStringConnection;
+        private Button buttonUpdateByJson;
+        private OpenFileDialog openFileDialog;
+        private TextBox fieldNameCafe;
     }
 }

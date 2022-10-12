@@ -8,7 +8,7 @@ namespace TeleBotOrders
         [STAThread]
         static void Main()
         {
-            var a = Parser.GetCafe();
+            //var a = Parser.GetCafe();
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();

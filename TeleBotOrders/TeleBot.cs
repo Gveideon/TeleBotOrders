@@ -362,8 +362,8 @@ namespace TeleBotOrders
                         else
                         {
                             var order = _currentOrders.FirstOrDefault().Value;
-
-                            order.Dishes = new List<Dish>();
+                            if(order.Dishes == null)
+                                order.Dishes = new List<Dish>();
                             order.Dishes.AddRange(dishes[chatId]);
                             var userSum = dishes[chatId].Select(x => x.Count * x.Price).Sum();
                             order.TotalAmount += userSum;
@@ -477,7 +477,7 @@ namespace TeleBotOrders
                     if (_initUser != null && _initUser.Id != chatId && call.Data == "join_to_order_yes" && _typeHandler == TypeHandler.OrderChooseMenu && _coopUsers.Find(x => x.Id == chatId) == null)
                     {
                         var user = DBController.FindUserByIndex(chatId);
-                        if (_coopUsers.First(x => x.Id == user.Id) == null)
+                        if (_coopUsers.FirstOrDefault(x => x.Id == user.Id) == null)
                         {
                             _coopUsers.Add(user);
                             _countUserInOrder++;
@@ -494,7 +494,7 @@ namespace TeleBotOrders
                             return;
                         }
                         var user = DBController.FindUserByIndex(chatId);
-                        if (_coopUsers.First(x => x.Id == user.Id) == null)
+                        if (_coopUsers.FirstOrDefault(x => x.Id == user.Id) == null)
                         {
                             _coopUsers.Add(user);
                             _countUserInOrder++;

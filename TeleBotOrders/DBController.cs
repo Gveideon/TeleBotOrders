@@ -20,14 +20,13 @@ namespace TeleBotOrders
                     var users = db.Users.ToList();
                     var users1 = db.Users;
                     var userFromDb =  users1.Find(user.Id);
-                    if (users.Find(u => u.Id == user.Id) == null)
+                    if (userFromDb != null)
                     {
-                        db.Users.Add(user);
+                       db.Users.Remove(userFromDb);
+                       db.Users.Add(user);
                     }
-                    else
+                    else 
                     {
-                        //db.Users.Update(userFromDb);
-                        db.Users.Remove(userFromDb);
                         db.Users.Add(user);
                     }
                     db.SaveChanges();
@@ -51,15 +50,47 @@ namespace TeleBotOrders
                     var orders = db.Orders.ToList();
                     var orders1 = db.Orders;
                     var orderFromDb = orders1.Find(order.Id);
-                    if (orders.Find(o => o.Id == order.Id) == null)
-                    {
-                        db.Orders.Add(order);
-                    }
-                    else
+                    if (orderFromDb != null)
                     {
                         //db.Users.Update(userFromDb);
                         db.Orders.Remove(orderFromDb);
                         db.Orders.Add(order);
+                    }
+                    else
+                    {
+                        db.Orders.Add(order);
+                    }
+                    db.SaveChanges();
+                }
+                return true;
+            }
+
+            catch (Exception exp)
+            {
+                Debug.WriteLine(exp.Message);
+                return false;
+            }
+        }
+        public static bool UpdateCafe(List<Dish> dishes, string nameCafe) 
+        {
+            
+            try
+            {
+                ApplicationContext db;
+                using (db = new ApplicationContext())
+                {
+                    var cafe = new Cafe { Name = nameCafe, Menu = new Menu { Name = "Menu", Dishes = dishes } };
+                    var cafes = db.Cafes.ToList();
+                    var cafes1 = db.Cafes;
+                    var cafeFromDb = cafes1.Find(cafe.Id);
+                    if (cafeFromDb != null)
+                    {
+                        db.Cafes.Remove(cafeFromDb);
+                        db.Cafes.Add(cafe);
+                    }
+                    else
+                    {
+                        db.Cafes.Add(cafe);
                     }
                     db.SaveChanges();
                 }
