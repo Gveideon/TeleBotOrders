@@ -100,7 +100,8 @@ namespace TeleBotOrders
                     var text = "";
                     foreach (var dish in order.Dishes)
                     {
-                        text += $"Блюдо: {dish.Name}, {dish.Count} шт. \n\r";
+                        if(dish.Count !=0)
+                            text += $"Блюдо: {dish.Name}, {dish.Count} шт. \n\r";
                     }
                     foreach (var id in _usersIds)
                     {
@@ -387,7 +388,8 @@ namespace TeleBotOrders
                                 text = "";
                                 foreach (var dish in order.Dishes)
                                 {
-                                    text += $"Блюдо: {dish.Name}, {dish.Count} шт. \n\r";
+                                    if (dish.Count != 0)
+                                        text += $"Блюдо: {dish.Name}, {dish.Count} шт. \n\r";
                                 }
                                 foreach (var id in _usersIds)
                                 {
