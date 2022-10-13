@@ -27,7 +27,7 @@ class Parser:
         browser.quit()
         return page_source
 
-    def Parse_CE(self, page_source):
+    def __parse_CE(self, page_source):
         soup = BeautifulSoup(page_source, "lxml")
         list_result = []
         list__dishes = soup.select('div.sc-bczRLJ.kxPUqq')
@@ -44,7 +44,7 @@ class Parser:
             list_result.append([name, count, description, img, price])
         return list_result
 
-    def Parse_DODO(self, page_source):
+    def __parse_DODO(self, page_source):
         soup = BeautifulSoup(page_source, "lxml")
         list_result = []
         list__dishes = soup.select('section.sc-1n2d0ov-2.bxiXBh')
@@ -62,10 +62,9 @@ class Parser:
                     except Exception:
                         print('no good')
                     finally:
-                        img = ''
                         name = item.contents[0].contents[1].text
                         count = ''
-                        description = item.contents[0].contents[2:]
+                        description = "".join(item.contents[0].contents[2:])
                         price = item.contents[1].contents[0].contents[0]
                 list_result.append([name, count, description, img, price])
         return list_result
@@ -73,9 +72,9 @@ class Parser:
     def get_cafes(self, url):
         page_source = self.__get_page_source(url, self.__get_browser())
         if url == "https://dubna-china.ru":
-              result = self.Parse_CE(page_source)
+              result = self.__parse_CE(page_source)
         if url == "https://dodopizza.ru/dubna":
-            result = self.Parse_DODO(page_source)
+            result = self.__parse_DODO(page_source)
         return result
 
     
@@ -87,6 +86,7 @@ if __name__ == "__main__":
          json.dump(cafe_CE, write_file)
     print("good")
     cafe_DODO = parser.get_cafes(list_url[1])
+    print(cafe_DODO)
     with open("data_file_DODO.json", "w") as write_file:
         json.dump(cafe_DODO, write_file)
     print("good")
