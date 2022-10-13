@@ -65,7 +65,7 @@ class Parser:
                         name = item.contents[0].contents[1].text
                         count = ''
                         description = item.contents[0].contents[2:]
-                        price = ''#item.contents[1].contents[0].contents
+                        price = item.contents[1].contents[0].contents[0]
                 list_result.append([name, count, description, img, price])
         return list_result
 
