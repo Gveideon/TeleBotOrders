@@ -62,6 +62,7 @@ class Parser:
                     except Exception:
                         print('no good')
                     finally:
+                        img = ''
                         name = item.contents[0].contents[1].text
                         count = ''
                         description = item.contents[0].contents[2:]
