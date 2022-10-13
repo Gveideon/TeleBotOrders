@@ -58,7 +58,7 @@ class Parser:
                     price = item.contents[2].contents[2].contents[0]
                 else:
                     try:
-                        img = item.contents[0].contents[0].contents[0]['srcset']
+                        img = item.contents[0].contents[0].contents[0]['srcset'].split()[0]
                     except Exception:
                         print('no good')
                     finally:
